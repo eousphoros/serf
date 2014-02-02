@@ -2,54 +2,28 @@
 set -e
 
 # Install Nagios
-echo "DemoMonitor" > /tmp/mailname
-sudo mv /tmp/mailname /etc/mailname
 
-echo <<EOF > /tmp/main.cf
-# See /usr/share/postfix/main.cf.dist for a commented, more complete version
-
-
-# Debian specific:  Specifying a file name will cause the first
-# line of that file to be used as the name.  The Debian default
-# is /etc/mailname.
-#myorigin = /etc/mailname
-
-smtpd_banner = $myhostname ESMTP $mail_name (Ubuntu)
-biff = no
-
-# appending .domain is the MUA's job.
-append_dot_mydomain = no
-
-# Uncomment the next line to generate "delayed mail" warnings
-#delay_warning_time = 4h
-
-readme_directory = no
-
-# TLS parameters
-smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
-smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
-smtpd_use_tls=yes
-smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
-smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
-
-# See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
-# information on enabling SSL in the smtp client.
-
-myhostname = monitoring
-alias_maps = hash:/etc/aliases
-alias_database = hash:/etc/aliases
-myorigin = /etc/mailname
-mydestination = localhost
-relayhost = 
-mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
-mailbox_size_limit = 0
-recipient_delimiter = +
-inet_interfaces = loopback-only
-default_transport = error
-relay_transport = error
-EOF
-sudo mkdir -p /etc/postfix
-sudo mv /tmp/main.cf /etc/postfix/main.cf
+echo postfix postfix/master_upgrade_warning  boolean  | debconf-set-selections
+echo postfix postfix/db_upgrade_warning  boolean true | debconf-set-selections
+echo postfix postfix/mailname    string  localhost | debconf-set-selections
+echo postfix postfix/tlsmgr_upgrade_warning  boolean  | debconf-set-selections
+echo postfix postfix/recipient_delim string  + | debconf-set-selections
+echo postfix postfix/dynamicmaps_upgrade_warning boolean  | debconf-set-selections
+echo postfix postfix/main_mailer_type    select  Satellite system | debconf-set-selections
+echo postfix postfix/transport_map_warning   note     | debconf-set-selections
+echo postfix postfix/relayhost   string  localhost | debconf-set-selections
+echo postfix postfix/procmail    boolean false | debconf-set-selections
+echo postfix postfix/bad_recipient_delimiter note     | debconf-set-selections
+echo postfix postfix/chattr  boolean false | debconf-set-selections
+echo postfix postfix/root_address    string   | debconf-set-selections
+echo postfix postfix/rfc1035_violation   boolean false | debconf-set-selections
+echo postfix postfix/mydomain_warning    boolean  | debconf-set-selections
+echo postfix postfix/mynetworks  string  127.0.0.0/8 | debconf-set-selections
+echo postfix postfix/destinations    string  localhost.localdomain, localhost | debconf-set-selections
+echo postfix postfix/nqmgr_upgrade_warning   boolean  | debconf-set-selections
+echo postfix postfix/not_configured  note     | debconf-set-selections
+echo postfix postfix/mailbox_limit   string  0 | debconf-set-selections
+echo postfix postfix/protocols   select  all | debconf-set-selections
 
 PASSWORD="DONTCARE1"
 
