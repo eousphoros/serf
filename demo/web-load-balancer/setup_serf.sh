@@ -27,6 +27,7 @@ if [ "x\${SERF_SELF_ROLE}" != "xlb" ]; then
   if [ "x\${SERF_SELF_ROLE}" != "xmon" ]; then
     echo "Not an lb or mon. Ignoring member join."
     exit 0
+  fi
 fi
 
 while read line; do
@@ -39,9 +40,9 @@ while read line; do
 
     if [ "x\${SERF_SELF_ROLE}" == "xlb" ]; then
         if [ "ROLE" == "xweb" ]; then
-            sed -i 's/#HTTPINSERVER/    server %s %s check\\n#HTTPINSERVER"/g /etc/haproxy/haproxy.cfg
+            sed -i 's/#HTTPINSERVER/    server %s %s check\\n#HTTPINSERVER"/g' /etc/haproxy/haproxy.cfg
         elif [ "ROLE" == "xmon" ]; then
-            sed -i 's/#MONINSERVER/    server %s %s check\\n#MONINSERVER"/g /etc/haproxy/haproxy.cfg
+            sed -i 's/#MONINSERVER/    server %s %s check\\n#MONINSERVER"/g' /etc/haproxy/haproxy.cfg
         fi
         /etc/init.d/haproxy reload
     elif [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
@@ -61,6 +62,7 @@ if [ "x\${SERF_SELF_ROLE}" != "xlb" ]; then
   if [ "x\${SERF_SELF_ROLE}" != "xmon" ]; then
     echo "Not an lb or mon. Ignoring member join."
     exit 0
+  fi
 fi
 
 while read line; do
@@ -96,7 +98,7 @@ sudo mv /tmp/agent.conf /etc/init/serf.conf
 sudo start serf
 
 # If we're the web node, then we need to configure the join retry
-if [ "x${SERF_ROLE}" != "xweb" ]; then
+if [ "x${SERF_ROLE}" == "xlb" ]; then
     exit 0
 fi
 
@@ -110,7 +112,6 @@ task
 respawn
 
 script
-    sleep 5
     exec /usr/local/bin/serf join 10.0.0.5
 end script
 EOF
