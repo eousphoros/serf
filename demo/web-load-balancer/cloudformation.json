@@ -155,6 +155,41 @@
             }
         },
 
+        "MonitorGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": {
+                "AvailabilityZones": [
+                    { "Fn::GetAtt" : [ "PrivateSubnet", "AvailabilityZone" ] }
+                ],
+                "LaunchConfigurationName": { "Ref": "MonitorLaunchConfig" },
+                "DesiredCapacity": "1",
+                "MinSize": "1",
+                "MaxSize": "1",
+                "Tags": [
+                    { "Key": "Name", "Value": "MonitorService", "PropagateAtLaunch": "True" },
+                    { "Key": "KIXEYE:Serf", "Value": "cluster", "PropagateAtLaunch": "True" }
+                ],
+                "VPCZoneIdentifier": [
+                    { "Ref": "PrivateSubnet" }
+                ]
+            },
+            "DependsOn": ["NATDevice", "NATIPAddress", "PrivateRouteGlobal"]
+        },
+
+        "MonitorLaunchConfig": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+            "Properties": {
+                "ImageId": { "Fn::FindInMap" : [ "AWSINSTAMI", { "Ref" : "AWS::Region" }, "AMI" ]},
+                "InstanceType": "m1.small",
+                "KeyName": "pbuckley-usw2-work",
+                "IamInstanceProfile": "ec2role",
+                "SecurityGroups": [
+                    {"Ref": "InstanceSecurityGroup"}
+                ],
+                "UserData": "IyEvYmluL2Jhc2gKTk9ERV9TRVRVUF9VUkw9Imh0dHBzOi8vcmF3LmdpdGh1Yi5jb20vZW91c3Bob3Jvcy9zZXJmL21hc3Rlci9kZW1vL3dlYi1sb2FkLWJhbGFuY2VyL3NldHVwX21vbml0b3Iuc2giCgpTRVJGX1NFVFVQX1VSTD0iaHR0cHM6Ly9yYXcuZ2l0aHViLmNvbS9lb3VzcGhvcm9zL3NlcmYvbWFzdGVyL2RlbW8vd2ViLWxvYWQtYmFsYW5jZXIvc2V0dXBfc2VyZi5zaCIKCiMgU2V0dXAgdGhlIG5vZGUgaXRzZWxmCndnZXQgLU8gLSAkTk9ERV9TRVRVUF9VUkwgfCBiYXNoCgojIFNldHVwIHRoZSBzZXJmIGFnZW50CmV4cG9ydCBTRVJGX1JPTEU9Im1vbiIKd2dldCAtTyAtICRTRVJGX1NFVFVQX1VSTCB8IGJhc2gK"
+            }
+        },
+
         "LoadBalancer": {
             "Type": "AWS::EC2::Instance",
             "Properties": {
@@ -216,41 +251,6 @@
                     {"Ref": "InstanceSecurityGroup"}
                 ],
                 "UserData": "IyEvYmluL2Jhc2gKTk9ERV9TRVRVUF9VUkw9Imh0dHBzOi8vcmF3LmdpdGh1Yi5jb20vZW91c3Bob3Jvcy9zZXJmL21hc3Rlci9kZW1vL3dlYi1sb2FkLWJhbGFuY2VyL3NldHVwX3dlYl9zZXJ2ZXIuc2giCgpTRVJGX1NFVFVQX1VSTD0iaHR0cHM6Ly9yYXcuZ2l0aHViLmNvbS9lb3VzcGhvcm9zL3NlcmYvbWFzdGVyL2RlbW8vd2ViLWxvYWQtYmFsYW5jZXIvc2V0dXBfc2VyZi5zaCIKCiMgU2V0dXAgdGhlIG5vZGUgaXRzZWxmCndnZXQgLU8gLSAkTk9ERV9TRVRVUF9VUkwgfCBiYXNoCgojIFNldHVwIHRoZSBzZXJmIGFnZW50CmV4cG9ydCBTRVJGX1JPTEU9IndlYiIKd2dldCAtTyAtICRTRVJGX1NFVFVQX1VSTCB8IGJhc2gK"
-            }
-        },
-
-        "MonitorGroup": {
-            "Type": "AWS::AutoScaling::AutoScalingGroup",
-            "Properties": {
-                "AvailabilityZones": [
-                    { "Fn::GetAtt" : [ "PrivateSubnet", "AvailabilityZone" ] }
-                ],
-                "LaunchConfigurationName": { "Ref": "MonitorLaunchConfig" },
-                "DesiredCapacity": "1",
-                "MinSize": "1",
-                "MaxSize": "1",
-                "Tags": [
-                    { "Key": "Name", "Value": "MonitorService", "PropagateAtLaunch": "True" },
-                    { "Key": "KIXEYE:Serf", "Value": "cluster", "PropagateAtLaunch": "True" }
-                ],
-                "VPCZoneIdentifier": [
-                    { "Ref": "PrivateSubnet" }
-                ]
-            },
-            "DependsOn": ["NATDevice", "NATIPAddress", "PrivateRouteGlobal"]
-        },
-
-        "MonitorLaunchConfig": {
-            "Type": "AWS::AutoScaling::LaunchConfiguration",
-            "Properties": {
-                "ImageId": { "Fn::FindInMap" : [ "AWSINSTAMI", { "Ref" : "AWS::Region" }, "AMI" ]},
-                "InstanceType": "m1.small",
-                "KeyName": "pbuckley-usw2-work",
-                "IamInstanceProfile": "ec2role",
-                "SecurityGroups": [
-                    {"Ref": "InstanceSecurityGroup"}
-                ],
-                "UserData": "IyEvYmluL2Jhc2gKTk9ERV9TRVRVUF9VUkw9Imh0dHBzOi8vcmF3LmdpdGh1Yi5jb20vZW91c3Bob3Jvcy9zZXJmL21hc3Rlci9kZW1vL3dlYi1sb2FkLWJhbGFuY2VyL3NldHVwX21vbml0b3Iuc2giCgpTRVJGX1NFVFVQX1VSTD0iaHR0cHM6Ly9yYXcuZ2l0aHViLmNvbS9lb3VzcGhvcm9zL3NlcmYvbWFzdGVyL2RlbW8vd2ViLWxvYWQtYmFsYW5jZXIvc2V0dXBfc2VyZi5zaCIKCiMgU2V0dXAgdGhlIG5vZGUgaXRzZWxmCndnZXQgLU8gLSAkTk9ERV9TRVRVUF9VUkwgfCBiYXNoCgojIFNldHVwIHRoZSBzZXJmIGFnZW50CmV4cG9ydCBTRVJGX1JPTEU9Im1vbiIKd2dldCAtTyAtICRTRVJGX1NFVFVQX1VSTCB8IGJhc2gK"
             }
         },
 
