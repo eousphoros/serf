@@ -165,6 +165,7 @@
                 ],
                 "SubnetId": { "Ref": "PublicSubnet" },
                 "IamInstanceProfile": "ec2role",
+                "KeyName": "pbuckley-usw2-work",
                 "Tags": [
                     { 
                       { "Key": "Name", "Value": "LoadBalancer" },
@@ -203,7 +204,7 @@
                     { "Ref": "PrivateSubnet" }
                 ]
             },
-            "DependsOn": ["NATDevice", "NATIPAddress", "PrivateRouteGlobal"]
+            "DependsOn": ["NATDevice", "NATIPAddress", "PrivateRouteGlobal", "MonitorLaunchConfig"]
         },
 
         "WebLaunchConfig": {
@@ -211,6 +212,7 @@
             "Properties": {
                 "ImageId": { "Fn::FindInMap" : [ "AWSINSTAMI", { "Ref" : "AWS::Region" }, "AMI" ]},
                 "InstanceType": "m1.small",
+                "KeyName": "pbuckley-usw2-work",
                 "IamInstanceProfile": "ec2role",
                 "SecurityGroups": [
                     {"Ref": "InstanceSecurityGroup"}
@@ -245,6 +247,7 @@
             "Properties": {
                 "ImageId": { "Fn::FindInMap" : [ "AWSINSTAMI", { "Ref" : "AWS::Region" }, "AMI" ]},
                 "InstanceType": "m1.small",
+                "KeyName": "pbuckley-usw2-work",
                 "IamInstanceProfile": "ec2role",
                 "SecurityGroups": [
                     {"Ref": "InstanceSecurityGroup"}
@@ -272,6 +275,11 @@
                     "IpProtocol": "tcp",
                     "FromPort": "80",
                     "ToPort": "80",
+                    "CidrIp": "0.0.0.0/0"
+                }, {
+                    "IpProtocol": "tcp",
+                    "FromPort": "8080",
+                    "ToPort": "8080",
                     "CidrIp": "0.0.0.0/0"
                 }, {
                     "IpProtocol": "tcp",
