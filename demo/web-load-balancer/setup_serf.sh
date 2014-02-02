@@ -44,7 +44,7 @@ while read line; do
             eval "sed -i 's/#HTTPINSERVER/    server \$NAME \$IP check\\n#HTTPINSERVER/g' /etc/haproxy/haproxy.cfg"
         fi
         if [ "x\${ROLE}" == "xmon" ]; then
-            eval "sed -i 's/#MONINSERVER/    server \$NAME \$IP check\\n#HTTPINSERVER/g' /etc/haproxy/haproxy.cfg"
+            eval "sed -i 's/#MONINSERVER/    server \$NAME \$IP check\\n#MONINSERVER/g' /etc/haproxy/haproxy.cfg"
         fi
         /etc/init.d/haproxy reload
     elif [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
@@ -60,11 +60,14 @@ chmod +x /usr/local/bin/serf_member_join.sh
 # The member leave script is invoked when a member leaves or fails out
 # of the serf cluster. Our script removes the node from the load balancer.
 cat <<EOF >/tmp/leave.sh
+if [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
+  MON="true"  
+fi
 if [ "x\${SERF_SELF_ROLE}" != "xlb" ]; then
-  if [ "x\${SERF_SELF_ROLE}" != "xmon" ]; then
-    echo "Not an lb or mon. Ignoring member join."
-    exit 0
-  fi
+    if [ "\$MON" != "true" ]; then
+      echo "Not lb or mon. Ignoring member join."
+      exit 0
+    fi
 fi
 
 while read line; do
@@ -72,7 +75,8 @@ while read line; do
         NAME=\`echo \$line | awk '{print \\\$1 }'\`
         sed -i'' "/\${NAME} /d" /etc/haproxy/haproxy.cfg
         /etc/init.d/haproxy reload
-    elif [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
+    fi
+    if [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
         rm /etc/nagios3/conf.d/\$1_serf.cfg
         /etc/init.d/nagios3 reload
     fi
@@ -81,6 +85,11 @@ done
 EOF
 sudo mv /tmp/leave.sh /usr/local/bin/serf_member_left.sh
 chmod +x /usr/local/bin/serf_member_left.sh
+
+
+if [ -z "${SERF_ROLE}" ]; then
+  SERF_ROLE="unset"
+fi
 
 # Configure the agent
 cat <<EOF >/tmp/agent.conf

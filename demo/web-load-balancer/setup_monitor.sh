@@ -58,7 +58,7 @@ echo nagios3-cgi nagios3/adminpassword-repeat password $PASSWORD | debconf-set-s
 
 export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update
-sudo apt-get install -y -q --force-yes nagios3
+sudo apt-get install -y -q --force-yes postfix nagios3 | tee /tmp/install.log
 
 # Start it
 sudo /etc/init.d/nagios3 start
