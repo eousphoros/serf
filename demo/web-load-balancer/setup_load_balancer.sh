@@ -34,6 +34,13 @@ listen http-in
     bind *:80
     balance roundrobin
     option http-server-close
+#HTTPINSERVER
+
+listen mon-in
+    bind *:8080
+    balance roundrobin
+    option http-server-close
+#MONINSERVER
 EOF
 sudo mv /tmp/haproxy.cfg /etc/haproxy/haproxy.cfg
 

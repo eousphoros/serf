@@ -30,16 +30,22 @@ if [ "x\${SERF_SELF_ROLE}" != "xlb" ]; then
 fi
 
 while read line; do
+    NAME=\`echo \$line | awk '{print \\\$1 }'\`
+    IP=\`echo \$line | awk '{print \\\$2 }'\`
     ROLE=\`echo \$line | awk '{print \\\$3 }'\`
     if [ "x\${ROLE}" != "xweb" ]; then
         continue
     fi
 
     if [ "x\${SERF_SELF_ROLE}" == "xlb" ]; then
-        echo \$line | awk '{ printf "    server %s %s check\\n", \$1, \$2 }' >>/etc/haproxy/haproxy.cfg
+        if [ "ROLE" == "xweb" ]; then
+            sed -i 's/#HTTPINSERVER/    server %s %s check\\n#HTTPINSERVER"/g /etc/haproxy/haproxy.cfg
+        elif [ "ROLE" == "xmon" ]; then
+            sed -i 's/#MONINSERVER/    server %s %s check\\n#MONINSERVER"/g /etc/haproxy/haproxy.cfg
+        fi
         /etc/init.d/haproxy reload
     elif [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
-        cat /etc/nagios3/conf.d/localhost_nagios2.cfg | sed 's/localhost/\$1/g' | sed 's/127.0.0.1/\$2/g' > /etc/nagios3/conf.d/\$1_serf.cfg
+        cat /etc/nagios3/conf.d/localhost_nagios2.cfg | sed 's/localhost/\$NAME/g' | sed 's/127.0.0.1/\$IP/g' > /etc/nagios3/conf.d/\$NAME_serf.cfg
         /etc/init.d/nagios3 reload
     fi
         
