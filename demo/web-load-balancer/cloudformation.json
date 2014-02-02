@@ -167,10 +167,8 @@
                 "IamInstanceProfile": "ec2role",
                 "KeyName": "pbuckley-usw2-work",
                 "Tags": [
-                    { 
-                      { "Key": "Name", "Value": "LoadBalancer" },
-                      { "Key": "KIXEYE:Serf", "Value": "cluster" }
-                    }
+                    { "Key": "Name", "Value": "LoadBalancer" },
+                    { "Key": "KIXEYE:Serf", "Value": "cluster" }
                 ],
                 "UserData": "IyEvYmluL2Jhc2gKTk9ERV9TRVRVUF9VUkw9Imh0dHBzOi8vcmF3LmdpdGh1Yi5jb20vZW91c3Bob3Jvcy9zZXJmL21hc3Rlci9kZW1vL3dlYi1sb2FkLWJhbGFuY2VyL3NldHVwX2xvYWRfYmFsYW5jZXIuc2giCgpTRVJGX1NFVFVQX1VSTD0iaHR0cHM6Ly9yYXcuZ2l0aHViLmNvbS9lb3VzcGhvcm9zL3NlcmYvbWFzdGVyL2RlbW8vd2ViLWxvYWQtYmFsYW5jZXIvc2V0dXBfc2VyZi5zaCIKCiMgU2V0dXAgdGhlIG5vZGUgaXRzZWxmCndnZXQgLU8gLSAkTk9ERV9TRVRVUF9VUkwgfCBiYXNoCgojIFNldHVwIHRoZSBzZXJmIGFnZW50CmV4cG9ydCBTRVJGX1JPTEU9ImxiIgp3Z2V0IC1PIC0gJFNFUkZfU0VUVVBfVVJMIHwgYmFzaAo="
             },
