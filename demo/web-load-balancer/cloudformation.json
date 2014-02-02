@@ -36,7 +36,21 @@
             "Type": "String",
             "Default": "5",
             "Description": "Number of max web servers to launch."
-        }
+        },
+
+        "WebInstanceClass": {
+          "Default": "m1.small",
+          "Description" : "WebService instance type",
+          "Type": "String",
+          "AllowedValues" : [ "m1.small", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge" ],
+        },
+
+        "MonInstanceClass": {
+          "Default": "m1.small",
+          "Description" : "MonService instance type",
+          "Type": "String",
+          "AllowedValues" : [ "m1.small", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge" ],
+        },
     },
 
     "Outputs": {
@@ -46,6 +60,7 @@
     },
 
     "Resources": {
+
         "Gateway": {
             "Type": "AWS::EC2::InternetGateway"
         },
@@ -180,7 +195,7 @@
             "Type": "AWS::AutoScaling::LaunchConfiguration",
             "Properties": {
                 "ImageId": { "Fn::FindInMap" : [ "AWSINSTAMI", { "Ref" : "AWS::Region" }, "AMI" ]},
-                "InstanceType": "m1.small",
+                "InstanceType": { "Ref" : "MonInstanceClass" },
                 "KeyName": "pbuckley-usw2-work",
                 "IamInstanceProfile": "ec2role",
                 "SecurityGroups": [
@@ -244,7 +259,7 @@
             "Type": "AWS::AutoScaling::LaunchConfiguration",
             "Properties": {
                 "ImageId": { "Fn::FindInMap" : [ "AWSINSTAMI", { "Ref" : "AWS::Region" }, "AMI" ]},
-                "InstanceType": "m1.small",
+                "InstanceType": { "Ref" : "WebInstanceClass" },
                 "KeyName": "pbuckley-usw2-work",
                 "IamInstanceProfile": "ec2role",
                 "SecurityGroups": [
@@ -252,6 +267,68 @@
                 ],
                 "UserData": "IyEvYmluL2Jhc2gKTk9ERV9TRVRVUF9VUkw9Imh0dHBzOi8vcmF3LmdpdGh1Yi5jb20vZW91c3Bob3Jvcy9zZXJmL21hc3Rlci9kZW1vL3dlYi1sb2FkLWJhbGFuY2VyL3NldHVwX3dlYl9zZXJ2ZXIuc2giCgpTRVJGX1NFVFVQX1VSTD0iaHR0cHM6Ly9yYXcuZ2l0aHViLmNvbS9lb3VzcGhvcm9zL3NlcmYvbWFzdGVyL2RlbW8vd2ViLWxvYWQtYmFsYW5jZXIvc2V0dXBfc2VyZi5zaCIKCiMgU2V0dXAgdGhlIG5vZGUgaXRzZWxmCndnZXQgLU8gLSAkTk9ERV9TRVRVUF9VUkwgfCBiYXNoCgojIFNldHVwIHRoZSBzZXJmIGFnZW50CmV4cG9ydCBTRVJGX1JPTEU9IndlYiIKd2dldCAtTyAtICRTRVJGX1NFVFVQX1VSTCB8IGJhc2gK"
             }
+        },
+
+        "WebScaleUpPolicy" : {
+          "Type" : "AWS::AutoScaling::ScalingPolicy",
+          "Properties" : {
+            "AdjustmentType" : "ChangeInCapacity",
+            "AutoScalingGroupName" : { "Ref" : "WebGroup" },
+            "Cooldown" : "60",
+            "ScalingAdjustment" : "1"
+          }
+        },
+
+        "WebScaleDownPolicy" : {
+          "Type" : "AWS::AutoScaling::ScalingPolicy",
+          "Properties" : {
+            "AdjustmentType" : "ChangeInCapacity",
+            "AutoScalingGroupName" : { "Ref" : "WebGroup" },
+            "Cooldown" : "60",
+            "ScalingAdjustment" : "-1"
+          }
+        },
+    
+        "CPUAlarmHigh": {
+         "Type": "AWS::CloudWatch::Alarm",
+         "Properties": {
+            "AlarmDescription": "Scale-up if CPU > 90% for 10 minutes",
+            "MetricName": "CPUUtilization",
+            "Namespace": "AWS/EC2",
+            "Statistic": "Average",
+            "Period": "300",
+            "EvaluationPeriods": "2",
+            "Threshold": "90",
+            "AlarmActions": [ { "Ref": "WebScaleUpPolicy" } ],
+            "Dimensions": [
+              {
+                "Name": "AutoScalingGroupName",
+                "Value": { "Ref": "WebGroup" }
+              }
+            ],
+            "ComparisonOperator": "GreaterThanThreshold"
+          }
+        },
+
+        "CPUAlarmLow": {
+         "Type": "AWS::CloudWatch::Alarm",
+         "Properties": {
+            "AlarmDescription": "Scale-down if CPU < 70% for 10 minutes",
+            "MetricName": "CPUUtilization",
+            "Namespace": "AWS/EC2",
+            "Statistic": "Average",
+            "Period": "300",
+            "EvaluationPeriods": "2",
+            "Threshold": "70",
+            "AlarmActions": [ { "Ref": "WebScaleDownPolicy" } ],
+            "Dimensions": [
+              {
+                "Name": "AutoScalingGroupName",
+                "Value": { "Ref": "WebGroup" }
+              }
+            ],
+            "ComparisonOperator": "LessThanThreshold"
+          }
         },
 
         "InstanceSecurityGroup": {
