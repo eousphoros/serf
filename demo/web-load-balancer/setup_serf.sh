@@ -24,7 +24,8 @@ sudo mv serf /usr/local/bin/serf
 # Our join script simply adds the node to the load balancer.
 cat <<EOF >/tmp/join.sh
 if [ "x\${SERF_SELF_ROLE}" != "xlb" ]; then
-    echo "Not an lb. Ignoring member join."
+  if [ "x\${SERF_SELF_ROLE}" != "xmon" ]; then
+    echo "Not an lb or mon. Ignoring member join."
     exit 0
 fi
 
@@ -34,11 +35,15 @@ while read line; do
         continue
     fi
 
-    echo \$line | \\
-        awk '{ printf "    server %s %s check\\n", \$1, \$2 }' >>/etc/haproxy/haproxy.cfg
+    if [ "x\${SERF_SELF_ROLE}" == "xlb" ]; then
+        echo \$line | awk '{ printf "    server %s %s check\\n", \$1, \$2 }' >>/etc/haproxy/haproxy.cfg
+        /etc/init.d/haproxy reload
+    elif [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
+        cat /etc/nagios3/conf.d/localhost_nagios2.cfg | sed 's/localhost/\$1/g' | sed 's/127.0.0.1/\$2/g' > /etc/nagios3/conf.d/\$1_serf.cfg
+        /etc/init.d/nagios3 reload
+    fi
+        
 done
-
-/etc/init.d/haproxy reload
 EOF
 sudo mv /tmp/join.sh /usr/local/bin/serf_member_join.sh
 chmod +x /usr/local/bin/serf_member_join.sh
@@ -47,16 +52,22 @@ chmod +x /usr/local/bin/serf_member_join.sh
 # of the serf cluster. Our script removes the node from the load balancer.
 cat <<EOF >/tmp/leave.sh
 if [ "x\${SERF_SELF_ROLE}" != "xlb" ]; then
-    echo "Not an lb. Ignoring member leave"
+  if [ "x\${SERF_SELF_ROLE}" != "xmon" ]; then
+    echo "Not an lb or mon. Ignoring member join."
     exit 0
 fi
 
 while read line; do
-    NAME=\`echo \$line | awk '{print \\\$1 }'\`
-    sed -i'' "/\${NAME} /d" /etc/haproxy/haproxy.cfg
+    if [ "x\${SERF_SELF_ROLE}" == "xlb" ]; then
+        NAME=\`echo \$line | awk '{print \\\$1 }'\`
+        sed -i'' "/\${NAME} /d" /etc/haproxy/haproxy.cfg
+        /etc/init.d/haproxy reload
+    elif [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
+        rm /etc/nagios3/conf.d/\$1_serf.cfg
+        /etc/init.d/nagios3 reload
+    fi
 done
 
-/etc/init.d/haproxy reload
 EOF
 sudo mv /tmp/leave.sh /usr/local/bin/serf_member_left.sh
 chmod +x /usr/local/bin/serf_member_left.sh
