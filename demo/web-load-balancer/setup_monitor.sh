@@ -35,11 +35,11 @@ smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 # See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
 # information on enabling SSL in the smtp client.
 
-myhostname = ip-10-0-1-148.us-west-2.compute.internal
+myhostname = monitoring
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
 myorigin = /etc/mailname
-mydestination = ip-10-0-1-148.us-west-2.compute.internal, localhost.us-west-2.compute.internal, localhost
+mydestination = localhost
 relayhost = 
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
 mailbox_size_limit = 0
@@ -58,7 +58,7 @@ echo nagios3-cgi nagios3/adminpassword-repeat password $PASSWORD | debconf-set-s
 
 export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update
-sudo apt-get install -y -q --force-yes postfix nagios3 | tee /tmp/install.log
+sudo apt-get install -o Dpkg::Options::='--force-confnew' -y -q --force-yes postfix nagios3 | tee /tmp/install.log
 
 # Start it
 sudo /etc/init.d/nagios3 start
