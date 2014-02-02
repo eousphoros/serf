@@ -23,10 +23,11 @@ sudo mv serf /usr/local/bin/serf
 # The member join script is invoked when a member joins the Serf cluster.
 # Our join script simply adds the node to the load balancer.
 cat <<EOF >/tmp/join.sh
-if [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
+#!/usr/bin/env bash
+if [ "\${SERF_SELF_ROLE}" == "mon" ]; then
   MON="true"  
 fi
-if [ "x\${SERF_SELF_ROLE}" != "xlb" ]; then
+if [ "\${SERF_SELF_ROLE}" != "lb" ]; then
     if [ "\$MON" != "true" ]; then
       echo "Not lb or mon. Ignoring member join." | tee /tmp/join.log
       exit 0
@@ -39,16 +40,19 @@ while read line; do
     IP=\`echo \$line | awk '{print \\\$2 }'\`
     ROLE=\`echo \$line | awk '{print \\\$3 }'\`
 
-    if [ "x\${SERF_SELF_ROLE}" == "xlb" ]; then
-        if [ "x\${ROLE}" == "xweb" ]; then
+    env >> /tmp/member-join.log
+    echo "\$SERF_SELF_ROLE \$NAME \$IP \$ROLE" >> /tmp/member-join.log
+
+    if [ "\${SERF_SELF_ROLE}" == "lb" ]; then
+        if [ "\${ROLE}" == "web" ]; then
             eval "sed -i 's/#HTTPINSERVER/    server \$NAME \$IP check\\n#HTTPINSERVER/g' /etc/haproxy/haproxy.cfg" | tee /tmp/mod.log
         fi
-        if [ "x\${ROLE}" == "xmon" ]; then
+        if [ "\${ROLE}" == "mon" ]; then
             eval "sed -i 's/#MONINSERVER/    server \$NAME \$IP check\\n#MONINSERVER/g' /etc/haproxy/haproxy.cfg" | tee /tmp/mod.log
         fi
         /etc/init.d/haproxy reload
         echo "HAPROXY" >> /tmp/mod.log
-    elif [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
+    elif [ "\${SERF_SELF_ROLE}" == "mon" ]; then
         cat /etc/nagios3/conf.d/localhost_nagios2.cfg | sed 's/localhost/\$NAME/g' | sed 's/127.0.0.1/\$IP/g' > /etc/nagios3/conf.d/\$NAME_serf.cfg | tee /tmp/mod.log
         /etc/init.d/nagios3 reload
     fi
@@ -61,10 +65,11 @@ chmod +x /usr/local/bin/serf_member_join.sh
 # The member leave script is invoked when a member leaves or fails out
 # of the serf cluster. Our script removes the node from the load balancer.
 cat <<EOF >/tmp/leave.sh
-if [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
+#!/usr/bin/env bash
+if [ "\${SERF_SELF_ROLE}" == "mon" ]; then
   MON="true"  
 fi
-if [ "x\${SERF_SELF_ROLE}" != "xlb" ]; then
+if [ "\${SERF_SELF_ROLE}" != "lb" ]; then
     if [ "\$MON" != "true" ]; then
       echo "Not lb or mon. Ignoring member join."
       exit 0
@@ -72,12 +77,12 @@ if [ "x\${SERF_SELF_ROLE}" != "xlb" ]; then
 fi
 
 while read line; do
-    if [ "x\${SERF_SELF_ROLE}" == "xlb" ]; then
+    if [ "\${SERF_SELF_ROLE}" == "lb" ]; then
         NAME=\`echo \$line | awk '{print \\\$1 }'\`
         sed -i'' "/\${NAME} /d" /etc/haproxy/haproxy.cfg
         /etc/init.d/haproxy reload
     fi
-    if [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
+    if [ "\${SERF_SELF_ROLE}" == "mon" ]; then
         rm /etc/nagios3/conf.d/\$1_serf.cfg
         /etc/init.d/nagios3 reload
     fi
@@ -109,8 +114,7 @@ sudo mv /tmp/agent.conf /etc/init/serf.conf
 # Start the agent!
 sudo start serf
 
-# If we're the web node, then we need to configure the join retry
-if [ "x${SERF_ROLE}" == "xlb" ]; then
+if [ "${SERF_ROLE}" == "lb" ]; then
     exit 0
 fi
 
