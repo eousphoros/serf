@@ -53,7 +53,24 @@ while read line; do
         /etc/init.d/haproxy reload
         echo "HAPROXY" >> /tmp/mod.log
     elif [ "\${SERF_SELF_ROLE}" == "mon" ]; then
-        cat /etc/nagios3/conf.d/localhost_nagios2.cfg | eval "sed 's/localhost/\$NAME/g'" | eval "sed 's/127.0.0.1/\$IP/g'" > /etc/nagios3/conf.d/\$NAME_serf.cfg
+        if [ ! -d /etc/nagios3/conf.d ]; then
+           mkdir -p /etc/nagios3/conf.d
+        fi
+        cat <<EOL > /etc/nagios3/conf.d/\$NAME.cfg
+define host { 
+	host_name			\$NAME
+	alias				\$NAME serf
+	address				\$IP
+	check_command			check-host-alive
+	check_interval			5
+	retry_interval			1
+	max_check_attempts		5
+	check_period			24x7
+	notification_interval		30
+	notification_period		24x7
+	notification_options		d,u,r
+}
+EOL
         /etc/init.d/nagios3 reload
     fi
         
