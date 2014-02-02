@@ -28,7 +28,7 @@ if [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
 fi
 if [ "x\${SERF_SELF_ROLE}" != "xlb" ]; then
     if [ "\$MON" != "true" ]; then
-      echo "Not lb or mon. Ignoring member join."
+      echo "Not lb or mon. Ignoring member join." | tee /tmp/join.log
       exit 0
     fi
 fi
@@ -41,14 +41,15 @@ while read line; do
 
     if [ "x\${SERF_SELF_ROLE}" == "xlb" ]; then
         if [ "x\${ROLE}" == "xweb" ]; then
-            eval "sed -i 's/#HTTPINSERVER/    server \$NAME \$IP check\\n#HTTPINSERVER/g' /etc/haproxy/haproxy.cfg"
+            eval "sed -i 's/#HTTPINSERVER/    server \$NAME \$IP check\\n#HTTPINSERVER/g' /etc/haproxy/haproxy.cfg" | tee /tmp/mod.log
         fi
         if [ "x\${ROLE}" == "xmon" ]; then
-            eval "sed -i 's/#MONINSERVER/    server \$NAME \$IP check\\n#MONINSERVER/g' /etc/haproxy/haproxy.cfg"
+            eval "sed -i 's/#MONINSERVER/    server \$NAME \$IP check\\n#MONINSERVER/g' /etc/haproxy/haproxy.cfg" | tee /tmp/mod.log
         fi
         /etc/init.d/haproxy reload
+        echo "HAPROXY" >> /tmp/mod.log
     elif [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
-        cat /etc/nagios3/conf.d/localhost_nagios2.cfg | sed 's/localhost/\$NAME/g' | sed 's/127.0.0.1/\$IP/g' > /etc/nagios3/conf.d/\$NAME_serf.cfg
+        cat /etc/nagios3/conf.d/localhost_nagios2.cfg | sed 's/localhost/\$NAME/g' | sed 's/127.0.0.1/\$IP/g' > /etc/nagios3/conf.d/\$NAME_serf.cfg | tee /tmp/mod.log
         /etc/init.d/nagios3 reload
     fi
         
