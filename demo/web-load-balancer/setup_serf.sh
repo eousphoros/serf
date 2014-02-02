@@ -45,10 +45,10 @@ while read line; do
 
     if [ "\${SERF_SELF_ROLE}" == "lb" ]; then
         if [ "\${ROLE}" == "web" ]; then
-            eval "sed -i 's/#HTTPINSERVER/    server \$NAME \$IP check\\n#HTTPINSERVER/g' /etc/haproxy/haproxy.cfg" | tee /tmp/mod.log
+            eval "sed -i 's/#HTTPINSERVER/    server \$NAME \$IP:80 check\\n#HTTPINSERVER/g' /etc/haproxy/haproxy.cfg" | tee /tmp/mod.log
         fi
         if [ "\${ROLE}" == "mon" ]; then
-            eval "sed -i 's/#MONINSERVER/    server \$NAME \$IP check\\n#MONINSERVER/g' /etc/haproxy/haproxy.cfg" | tee /tmp/mod.log
+            eval "sed -i 's/#MONINSERVER/    server \$NAME \$IP:80 check\\n#MONINSERVER/g' /etc/haproxy/haproxy.cfg" | tee /tmp/mod.log
         fi
         /etc/init.d/haproxy reload
         echo "HAPROXY" >> /tmp/mod.log

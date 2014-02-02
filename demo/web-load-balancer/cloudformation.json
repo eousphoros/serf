@@ -173,7 +173,7 @@
                     { "Ref": "PrivateSubnet" }
                 ]
             },
-            "DependsOn": ["NATDevice", "NATIPAddress", "PrivateRouteGlobal"]
+            "DependsOn": "PublicRouteGlobal"
         },
 
         "MonitorLaunchConfig": {
