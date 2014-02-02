@@ -26,6 +26,18 @@
     },
 
     "Parameters": {
+        "MonInstanceClass": {
+            "Type": "String",
+            "Default": "m1.small",
+            "Description": "Size of Monitor Service Instance."
+        },
+
+        "WebInstanceClass": {
+            "Type": "String",
+            "Default": "m1.small",
+            "Description": "Size of Web Service Instance."
+        },
+
         "WebNodesMin": {
             "Type": "String",
             "Default": "2",
@@ -36,21 +48,8 @@
             "Type": "String",
             "Default": "5",
             "Description": "Number of max web servers to launch."
-        },
+        }
 
-        "WebInstanceClass": {
-          "Default": "m1.small",
-          "Description" : "WebService instance type",
-          "Type": "String",
-          "AllowedValues" : [ "m1.small", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge" ],
-        },
-
-        "MonInstanceClass": {
-          "Default": "m1.small",
-          "Description" : "MonService instance type",
-          "Type": "String",
-          "AllowedValues" : [ "m1.small", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge" ],
-        },
     },
 
     "Outputs": {
