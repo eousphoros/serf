@@ -23,26 +23,28 @@ sudo mv serf /usr/local/bin/serf
 # The member join script is invoked when a member joins the Serf cluster.
 # Our join script simply adds the node to the load balancer.
 cat <<EOF >/tmp/join.sh
-if [ "x\${SERF_SELF_ROLE}" != "xlb" ]; then
-  if [ "x\${SERF_SELF_ROLE}" != "xmon" ]; then
-    echo "Not an lb or mon. Ignoring member join."
-    exit 0
-  fi
+if [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
+  MON="true"  
 fi
+if [ "x\${SERF_SELF_ROLE}" != "xlb" ]; then
+    if [ "\$MON" != "true" ]; then
+      echo "Not lb or mon. Ignoring member join."
+      exit 0
+    fi
+fi
+
 
 while read line; do
     NAME=\`echo \$line | awk '{print \\\$1 }'\`
     IP=\`echo \$line | awk '{print \\\$2 }'\`
     ROLE=\`echo \$line | awk '{print \\\$3 }'\`
-    if [ "x\${ROLE}" != "xweb" ]; then
-        continue
-    fi
 
     if [ "x\${SERF_SELF_ROLE}" == "xlb" ]; then
-        if [ "ROLE" == "xweb" ]; then
-            sed -i 's/#HTTPINSERVER/    server %s %s check\\n#HTTPINSERVER"/g' /etc/haproxy/haproxy.cfg
-        elif [ "ROLE" == "xmon" ]; then
-            sed -i 's/#MONINSERVER/    server %s %s check\\n#MONINSERVER"/g' /etc/haproxy/haproxy.cfg
+        if [ "x\${ROLE}" == "xweb" ]; then
+            eval "sed -i 's/#HTTPINSERVER/    server \$NAME \$IP check\\n#HTTPINSERVER/g' /etc/haproxy/haproxy.cfg"
+        fi
+        if [ "x\${ROLE}" == "xmon" ]; then
+            eval "sed -i 's/#MONINSERVER/    server \$NAME \$IP check\\n#HTTPINSERVER/g' /etc/haproxy/haproxy.cfg"
         fi
         /etc/init.d/haproxy reload
     elif [ "x\${SERF_SELF_ROLE}" == "xmon" ]; then
