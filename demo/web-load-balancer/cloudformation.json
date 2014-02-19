@@ -195,7 +195,7 @@
             "Properties": {
                 "ImageId": { "Fn::FindInMap" : [ "AWSINSTAMI", { "Ref" : "AWS::Region" }, "AMI" ]},
                 "InstanceType": { "Ref" : "MonInstanceClass" },
-                "KeyName": "pbuckley-usw2-work",
+                "KeyName": "sshkey",
                 "IamInstanceProfile": "ec2role",
                 "SecurityGroups": [
                     {"Ref": "InstanceSecurityGroup"}
@@ -214,7 +214,7 @@
                 ],
                 "SubnetId": { "Ref": "PublicSubnet" },
                 "IamInstanceProfile": "ec2role",
-                "KeyName": "pbuckley-usw2-work",
+                "KeyName": "sshkey",
                 "Tags": [
                     { "Key": "Name", "Value": "LoadBalancer" },
                     { "Key": "KIXEYE:Serf", "Value": "cluster" }
@@ -259,7 +259,7 @@
             "Properties": {
                 "ImageId": { "Fn::FindInMap" : [ "AWSINSTAMI", { "Ref" : "AWS::Region" }, "AMI" ]},
                 "InstanceType": { "Ref" : "WebInstanceClass" },
-                "KeyName": "pbuckley-usw2-work",
+                "KeyName": "sshkey",
                 "IamInstanceProfile": "ec2role",
                 "SecurityGroups": [
                     {"Ref": "InstanceSecurityGroup"}
