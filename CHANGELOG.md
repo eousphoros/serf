@@ -1,5 +1,10 @@
 ## 0.4.2 (Unreleased)
 
+FEATURES:
+
+ * New `tags` command is available to dynamically update tags without
+ reloading the agent. Thanks to @ryanuber. [GH-126]
+
 IMPROVEMENTS:
 
  * Upstart receipe logs output thanks to @breerly [GH-128]
@@ -10,6 +15,8 @@ BUG FIXES:
 
  * -config-dir would cause protocol to be set to 0 if there are no
  configuration files in the directory [GH-129]
+
+ * Event handlers can filter on 'member-update'
 
 ## 0.4.1 (Febuary 3, 2014)
 
