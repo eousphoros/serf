@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
 // This is the default port that we use for Serf communication
@@ -75,6 +76,11 @@ type Config struct {
 	// interface.
 	RPCAddr string `mapstructure:"rpc_addr"`
 
+	// RPCAuthKey is a key that can be set to optionally require that
+	// RPC's provide an authentication key. This is meant to be
+	// a very simple authentication control
+	RPCAuthKey string `mapstructure:"rpc_auth"`
+
 	// Protocol is the Serf protocol version to use.
 	Protocol int `mapstructure:"protocol"`
 
@@ -119,6 +125,17 @@ type Config struct {
 	// address of the provided interface. It is also used to set the multicast
 	// device used with `-discover`.
 	Interface string `mapstructure:"interface"`
+
+	// ReconnectIntervalRaw is the string reconnect interval time. This interval
+	// controls how often we attempt to connect to a failed node.
+	ReconnectIntervalRaw string        `mapstructure:"reconnect_interval"`
+	ReconnectInterval    time.Duration `mapstructure:"-"`
+
+	// ReconnectTimeoutRaw is the string reconnect timeout. This timeout controls
+	// for how long we atttempt to connect to a failed node before removing
+	// it from the cluster.
+	ReconnectTimeoutRaw string        `mapstructure:"reconnect_timeout"`
+	ReconnectTimeout    time.Duration `mapstructure:"-"`
 }
 
 // BindAddrParts returns the parts of the BindAddr that should be
@@ -194,6 +211,23 @@ func DecodeConfig(r io.Reader) (*Config, error) {
 		return nil, err
 	}
 
+	// Decode the time values
+	if result.ReconnectIntervalRaw != "" {
+		dur, err := time.ParseDuration(result.ReconnectIntervalRaw)
+		if err != nil {
+			return nil, err
+		}
+		result.ReconnectInterval = dur
+	}
+
+	if result.ReconnectTimeoutRaw != "" {
+		dur, err := time.ParseDuration(result.ReconnectTimeoutRaw)
+		if err != nil {
+			return nil, err
+		}
+		result.ReconnectTimeout = dur
+	}
+
 	return &result, nil
 }
 
@@ -246,6 +280,9 @@ func MergeConfig(a, b *Config) *Config {
 	if b.RPCAddr != "" {
 		result.RPCAddr = b.RPCAddr
 	}
+	if b.RPCAuthKey != "" {
+		result.RPCAuthKey = b.RPCAuthKey
+	}
 	if b.ReplayOnJoin != false {
 		result.ReplayOnJoin = b.ReplayOnJoin
 	}
@@ -266,6 +303,12 @@ func MergeConfig(a, b *Config) *Config {
 	}
 	if b.Interface != "" {
 		result.Interface = b.Interface
+	}
+	if b.ReconnectInterval != 0 {
+		result.ReconnectInterval = b.ReconnectInterval
+	}
+	if b.ReconnectTimeout != 0 {
+		result.ReconnectTimeout = b.ReconnectTimeout
 	}
 
 	// Copy the event handlers

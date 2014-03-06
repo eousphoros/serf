@@ -241,6 +241,12 @@ func (c *Command) setupAgent(config *Config, logOutput io.Writer) *Agent {
 	serfConfig.QuiescentPeriod = time.Second
 	serfConfig.UserCoalescePeriod = 3 * time.Second
 	serfConfig.UserQuiescentPeriod = time.Second
+	if config.ReconnectInterval != 0 {
+		serfConfig.ReconnectInterval = config.ReconnectInterval
+	}
+	if config.ReconnectTimeout != 0 {
+		serfConfig.ReconnectTimeout = config.ReconnectTimeout
+	}
 
 	// Start Serf
 	c.Ui.Output("Starting Serf agent...")
@@ -327,7 +333,7 @@ func (c *Command) startAgent(config *Config, agent *Agent,
 
 	// Start the IPC layer
 	c.Ui.Output("Starting Serf agent RPC...")
-	ipc := NewAgentIPC(agent, rpcListener, logOutput, logWriter)
+	ipc := NewAgentIPC(agent, config.RPCAuthKey, rpcListener, logOutput, logWriter)
 
 	c.Ui.Output("Serf agent running!")
 	c.Ui.Info(fmt.Sprintf("     Node name: '%s'", config.NodeName))

@@ -192,6 +192,11 @@ at a single JSON object with configuration within it.
 
 * `rpc_addr` - Equivalent to the `-rpc-addr` command-line flag.
 
+* `rpc_auth` - Used to provide an RPC auth token. If this token is set, then
+  all RPC clients are required to provide this token to make RPC requests.
+  This is a simple security mechanism that can be used to prevent other users
+  from making RPC requests to Serf without the token.
+
 * `event_handlers` - An array of strings specifying the event handlers.
   The format of the strings is equivalent to the format specified for
   the `-event-handler` command-line flag.
@@ -212,4 +217,10 @@ at a single JSON object with configuration within it.
   gracefully leave, but setting this to true disables that. Defaults to false.
   Interrupts are usually from a Control-C from a shell. (This was previously
   `leave_on_interrupt` but has since changed).
+
+* `reconnect_interval` - This controls how often the agent will attempt to
+  connect to a failed node. By default this is every 30 seconds.
+
+* `reconnect_timeout` - This controls for how long the agent attempts to connect
+  to a failed node before reaping it from the cluster. By default this is 24 hours.
 

@@ -968,10 +968,14 @@ func TestSerf_SnapshotRecovery(t *testing.T) {
 	defer s2.Shutdown()
 
 	// Wait for the node to auto rejoin
-	testutil.Yield()
-	testutil.Yield()
-	testutil.Yield()
-	testutil.Yield()
+	start := time.Now()
+	for time.Now().Sub(start) < time.Second {
+		members := s1.Members()
+		if len(members) == 2 && members[0].Status == StatusAlive && members[1].Status == StatusAlive {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 
 	// Verify that s2 is "alive"
 	testMember(t, s1.Members(), s2Config.NodeName, StatusAlive)
@@ -1127,7 +1131,7 @@ func TestSerf_Query(t *testing.T) {
 				if e.EventType() != EventQuery {
 					continue
 				}
-				q := e.(Query)
+				q := e.(*Query)
 				if err := q.Respond([]byte("test")); err != nil {
 					t.Fatalf("err: %s", err)
 				}
@@ -1210,7 +1214,7 @@ func TestSerf_Query_Filter(t *testing.T) {
 				if e.EventType() != EventQuery {
 					continue
 				}
-				q := e.(Query)
+				q := e.(*Query)
 				if err := q.Respond([]byte("test")); err != nil {
 					t.Fatalf("err: %s", err)
 				}
